@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="300dp"
+    android:height="300dp"
+    android:viewportWidth="300"
+    android:viewportHeight="300">
+    
+    <!-- Outer circle -->
+    <path
+        android:fillColor="#2C3E50"
+        android:pathData="M150,10 A140,140 0 1,1 150,290 A140,140 0 1,1 150,10 Z" />
+    
+    <!-- Inner circle -->
+    <path
+        android:fillColor="#34495E"
+        android:pathData="M150,20 A130,130 0 1,1 150,280 A130,130 0 1,1 150,20 Z" />
+    
+    <!-- North marker -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M150,20 L155,35 L150,30 L145,35 Z" />
+    
+    <!-- South marker -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M150,280 L155,265 L150,270 L145,265 Z" />
+    
+    <!-- East marker -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M280,150 L265,155 L270,150 L265,145 Z" />
+    
+    <!-- West marker -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M20,150 L35,155 L30,150 L35,145 Z" />
+    
+    <!-- Center dot -->
+    <path
+        android:fillColor="#E74C3C"
+        android:pathData="M150,146 A4,4 0 1,1 150,154 A4,4 0 1,1 150,146 Z" />
+        
+</vector>

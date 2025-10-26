@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Location permissions -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    
+    <!-- Alarm permissions -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    
+    <!-- Audio and notification permissions -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.VIBRATE" />
+    
+    <!-- File access permissions -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    
+    <!-- Battery optimization permissions -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
+    
+    <!-- Media button permissions -->
+    <uses-permission android:name="android.permission.MEDIA_BUTTON" />
+    <uses-permission android:name="android.permission.ACCESSIBILITY_SERVICE" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Masjd2"
+        tools:targetApi="31">
+        <activity
+            android:name=".ui.CheckingActivity"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity
+            android:name=".ui.FirstLaunchActivity"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".MainActivity"
+            android:exported="false"
+            android:label="@string/app_name"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:exported="false"
+            android:label="Settings"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".ui.DownloadProgressActivity"
+            android:exported="false"
+            android:label="Downloading Prayer Times"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".ui.PermissionsActivity"
+            android:exported="false"
+            android:label="Athan Permissions"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".AzkarActivity"
+            android:exported="false"
+            android:label="الأذكار"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".MorningAzkarActivity"
+            android:exported="false"
+            android:label="أذكار الصباح"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".EveningAzkarActivity"
+            android:exported="false"
+            android:label="أذكار المساء"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".AfterPrayerAzkarActivity"
+            android:exported="false"
+            android:label="أذكار بعد الصلاة"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".SleepAzkarActivity"
+            android:exported="false"
+            android:label="أذكار النوم والأحلام"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".FoodAzkarActivity"
+            android:exported="false"
+            android:label="أذكار الطعام والشراب والضيف"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".BathroomAzkarActivity"
+            android:exported="false"
+            android:label="أذكار دخول وخروج الخلاء"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".RainAzkarActivity"
+            android:exported="false"
+            android:label="أذكار المطر"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".HomeAzkarActivity"
+            android:exported="false"
+            android:label="أذكار الدخول والخروج من المنزل"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".ComprehensiveAzkarActivity"
+            android:exported="false"
+            android:label="أذكار الفرح والحزن والخوف والمرض والسفر"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".JoyAzkarActivity"
+            android:exported="false"
+            android:label="أذكار الفرح"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".SorrowAzkarActivity"
+            android:exported="false"
+            android:label="أذكار الحزن"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".FearAzkarActivity"
+            android:exported="false"
+            android:label="أذكار الخوف"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".IllnessAzkarActivity"
+            android:exported="false"
+            android:label="أذكار المرض"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".TravelAzkarActivity"
+            android:exported="false"
+            android:label="أذكار السفر"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".CompassActivity"
+            android:exported="false"
+            android:label="Qibla Compass"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+        <activity
+            android:name=".CompassCalibrationActivity"
+            android:exported="false"
+            android:label="Compass Calibration"
+            android:screenOrientation="portrait"
+            android:theme="@style/Theme.Masjd2" />
+            
+        <!-- Athan Service -->
+        <service
+            android:name=".services.AthanService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback" />
+
+        <!-- Prayer Notification Service -->
+        <service
+            android:name=".services.PrayerNotificationService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="specialUse" />
+            
+        <!-- Athan Broadcast Receiver -->
+        <receiver
+            android:name=".receivers.AthanBroadcastReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter android:priority="1000">
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.PACKAGE_REPLACED" />
+                <data android:scheme="package" />
+            </intent-filter>
+        </receiver>
+        
+        <!-- Athan Stop Receiver -->
+        <receiver
+            android:name=".receivers.AthanStopReceiver"
+            android:enabled="true"
+            android:exported="false" />
+            
+            
+    </application>
+
+</manifest>

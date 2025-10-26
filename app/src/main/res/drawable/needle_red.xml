@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    
+    <!-- Red needle pointing to Qibla -->
+    <path
+        android:fillColor="#E74C3C"
+        android:pathData="M100,20 L110,180 L100,190 L90,180 Z" />
+    
+    <!-- Needle tip -->
+    <path
+        android:fillColor="#C0392B"
+        android:pathData="M100,12 A8,8 0 1,1 100,28 A8,8 0 1,1 100,12 Z" />
+    
+    <!-- Center dot -->
+    <path
+        android:fillColor="#2C3E50"
+        android:pathData="M100,94 A6,6 0 1,1 100,106 A6,6 0 1,1 100,94 Z" />
+        
+</vector>
