@@ -348,23 +348,16 @@ class PrayerNotificationService : Service() {
             
             // Check if it's after midnight (12:00 AM) to determine "today" vs "tomorrow"
             val isAfterMidnight = currentHour < 6 // Between midnight and around 6 AM, Fajr is "today"
-            val dayText = if (isAfterMidnight) "today" else "tomorrow"
             
-            val calendar = Calendar.getInstance()
-            calendar.add(Calendar.DAY_OF_MONTH, 1)
-            val tomorrow = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(calendar.time)
-            
-            val tomorrowPrayerTimes = prayerRepository.getPrayerTimesForDate(tomorrow)
-            
-            if (tomorrowPrayerTimes != null) {
-                val fajrTime = tomorrowPrayerTimes.fajr
-                val (fajrHour, fajrMinute) = parseTimeString(fajrTime)
+            if (isAfterMidnight) {
+                // It's after midnight but before sunrise - get TODAY's Fajr (not tomorrow's)
+                val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(now.time)
+                val todayPrayerTimes = prayerRepository.getPrayerTimesForDate(today)
                 
-                // Calculate time until Fajr
-                val nowTotalMinutes = currentHour * 60 + now.get(Calendar.MINUTE)
-                
-                // If it's after midnight (before sunrise), Fajr is "today" - calculate normally
-                if (isAfterMidnight) {
+                if (todayPrayerTimes != null) {
+                    val fajrTime = todayPrayerTimes.fajr
+                    val (fajrHour, fajrMinute) = parseTimeString(fajrTime)
+                    val nowTotalMinutes = currentHour * 60 + now.get(Calendar.MINUTE)
                     val fajrTotalMinutes = fajrHour * 60 + fajrMinute
                     val minutesUntil = fajrTotalMinutes - nowTotalMinutes
                     
@@ -374,18 +367,27 @@ class PrayerNotificationService : Service() {
                         countdown = formatCountdown(minutesUntil * 60 * 1000L),
                         title = "Next: Fajr today at ${formatTime12Hour(fajrTime)}"
                     )
-                } else {
-                    // It's after Isha but before midnight, so Fajr is "tomorrow"
-                    val tomorrowFajrDateTime = parseTimeTomorrow(fajrTime)
-                    val timeUntil = tomorrowFajrDateTime - now.timeInMillis
-                    
-                    return PrayerInfo(
-                        name = "Fajr",
-                        time = formatTime12Hour(fajrTime),
-                        countdown = formatCountdown(timeUntil),
-                        title = "Next: Fajr tomorrow at ${formatTime12Hour(fajrTime)}"
-                    )
                 }
+            }
+            
+            // It's after Isha but before midnight, OR today's Fajr data not available - get tomorrow's Fajr
+            val calendar = Calendar.getInstance()
+            calendar.add(Calendar.DAY_OF_MONTH, 1)
+            val tomorrow = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(calendar.time)
+            
+            val tomorrowPrayerTimes = prayerRepository.getPrayerTimesForDate(tomorrow)
+            
+            if (tomorrowPrayerTimes != null) {
+                val fajrTime = tomorrowPrayerTimes.fajr
+                val tomorrowFajrDateTime = parseTimeTomorrow(fajrTime)
+                val timeUntil = tomorrowFajrDateTime - now.timeInMillis
+                
+                return PrayerInfo(
+                    name = "Fajr",
+                    time = formatTime12Hour(fajrTime),
+                    countdown = formatCountdown(timeUntil),
+                    title = "Next: Fajr tomorrow at ${formatTime12Hour(fajrTime)}"
+                )
             } else {
                 // Fallback if tomorrow's data is not available
                 PrayerInfo(
