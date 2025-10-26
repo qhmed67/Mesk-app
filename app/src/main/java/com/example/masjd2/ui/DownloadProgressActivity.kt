@@ -11,6 +11,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,6 +44,7 @@ class DownloadProgressActivity : ComponentActivity() {
     private var longitude: Double = 0.0
     private var method: Int = 3
     private var isReload: Boolean = false
+    private var isDownloadComplete by mutableStateOf(false)
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,6 +61,7 @@ class DownloadProgressActivity : ComponentActivity() {
         setContent {
             DownloadProgressScreen(
                 isReload = isReload,
+                isDownloadComplete = isDownloadComplete,
                 onDownloadComplete = { 
                     lifecycleScope.launch {
                         if (!isReload) {
@@ -110,13 +114,17 @@ class DownloadProgressActivity : ComponentActivity() {
                     // Schedule Athan alarms for today's prayer times
                     scheduleAthanAlarms()
                     
-                    // Download completed successfully
+                    // Download completed successfully - mark as complete in UI
+                    isDownloadComplete = true
                     Toast.makeText(this@DownloadProgressActivity, "Prayer times downloaded successfully!", Toast.LENGTH_SHORT).show()
                 } else {
-                    // Download failed
+                    // Download failed - mark as complete to show error
+                    isDownloadComplete = true
                     Toast.makeText(this@DownloadProgressActivity, "Failed to download prayer times", Toast.LENGTH_LONG).show()
                 }
             } catch (e: Exception) {
+                // Mark as complete even on error so UI can show error state
+                isDownloadComplete = true
                 Toast.makeText(this@DownloadProgressActivity, "Download failed: ${e.message}", Toast.LENGTH_LONG).show()
             }
         }
@@ -168,6 +176,7 @@ class DownloadProgressActivity : ComponentActivity() {
 @Composable
 fun DownloadProgressScreen(
     isReload: Boolean = false,
+    isDownloadComplete: Boolean = false,
     onDownloadComplete: () -> Unit,
     onDownloadError: (String) -> Unit
 ) {
@@ -175,8 +184,21 @@ fun DownloadProgressScreen(
     var currentStep by remember { mutableStateOf("Initializing download...") }
     var isCompleted by remember { mutableStateOf(false) }
     
-    // Simulate download progress
+    // Update UI when actual download completes
+    LaunchedEffect(isDownloadComplete) {
+        if (isDownloadComplete) {
+            isCompleted = true
+            progress = 1.0f
+            currentStep = "Download completed!"
+            delay(1000) // Show completion message
+            onDownloadComplete()
+        }
+    }
+    
+    // Simulate download progress only if not yet complete
     LaunchedEffect(Unit) {
+        // Only animate if download hasn't completed
+        if (!isDownloadComplete) {
         val steps = listOf(
             "Connecting to AlAdhan API..." to 0.1f,
             "Downloading January prayer times..." to 0.2f,
@@ -200,10 +222,7 @@ fun DownloadProgressScreen(
             progress = progressValue
             delay(800) // Simulate download time
         }
-        
-        isCompleted = true
-        delay(1000) // Show completion message
-        onDownloadComplete()
+        }
     }
     
     Box(
