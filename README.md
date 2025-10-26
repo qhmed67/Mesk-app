@@ -37,7 +37,7 @@ Mesk is an intelligent Islamic prayer times application that displays daily pray
 
 ```bash
 # Navigate to project directory
-cd Masjd2
+cd Mesk-app
 
 # Build release APK
 ./gradlew assembleRelease
