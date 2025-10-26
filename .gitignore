@@ -66,7 +66,7 @@ captures/
 .cxx/
 
 # Google Services (e.g. APIs or Firebase)
-# google-services.json
+google-services.json
 
 # Freeline
 freeline.py
@@ -156,3 +156,7 @@ hs_err_pid*
 background.png.bak
 starry_background.png.bak
 ic_launcher.zip
+
+# Output metadata
+output-metadata.json
+*.aab
