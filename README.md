@@ -10,15 +10,10 @@
 
 ![Kotlin](https://img.shields.io/badge/Kotlin-2.0.0-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
 ![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-BOM%202024.04.01-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)
-![Android](https://img.shields.io/badge/Android-7.0%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white)
-![Min SDK 24](https://img.shields.io/badge/Min%20SDK-24-FF6F00?style=for-the-badge&logo=android&logoColor=white)
+![Android](https://img.shields.io/badge/Android-7.0%2B%20%7C%20API%2024-3DDC84?style=for-the-badge&logo=android&logoColor=white)
 ![Room](https://img.shields.io/badge/Room-2.6.1%20%7C%20Flow-48B983?style=for-the-badge&logo=sqlite&logoColor=white)
 ![Retrofit](https://img.shields.io/badge/Retrofit-2.9.0-48B983?style=for-the-badge&logo=square&logoColor=white)
-![OkHttp](https://img.shields.io/badge/OkHttp-4.12.0%20Cache-3B3B3B?style=for-the-badge&logo=okhttp&logoColor=white)
 ![WorkManager](https://img.shields.io/badge/WorkManager-2.9.0-4285F4?style=for-the-badge&logo=android&logoColor=white)
-![Coroutines](https://img.shields.io/badge/Coroutines-1.7.3-FF6F00?style=for-the-badge&logo=kotlin&logoColor=white)
-![Lottie](https://img.shields.io/badge/Lottie-6.1.0-00B4AB?style=for-the-badge&logo=airbnb&logoColor=white)
-![Google Play Services](https://img.shields.io/badge/Play%20Services-Location-4285F4?style=for-the-badge&logo=google&logoColor=white)
 ![AlAdhan API](https://img.shields.io/badge/AlAdhan-Prayer%20API-A0522D?style=for-the-badge&logo=islam&logoColor=white)
 
 </div>
