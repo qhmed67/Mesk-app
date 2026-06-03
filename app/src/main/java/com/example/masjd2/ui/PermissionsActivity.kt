@@ -1,8 +1,10 @@
 package com.example.masjd2.ui
 
+import android.Manifest
 import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -32,6 +34,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.lifecycleScope
 import com.example.masjd2.MainActivity
 import com.example.masjd2.R
@@ -116,6 +119,34 @@ class PermissionsActivity : ComponentActivity() {
     }
 
     /**
+     * Check if notification permission is granted (Android 13+)
+     */
+    private fun canPostNotifications(): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+        } else {
+            true
+        }
+    }
+
+    /**
+     * Request notification permission (Android 13+)
+     */
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            try {
+                val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                    putExtra(Settings.EXTRA_APP_PACKAGE, packageName)
+                }
+                startActivity(intent)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error opening notification settings: ${e.message}", e)
+                Toast.makeText(this, "Please enable notifications in app settings", Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+
+    /**
      * Request battery optimization whitelist
      */
     private fun requestBatteryOptimization() {
@@ -146,6 +177,7 @@ class PermissionsActivity : ComponentActivity() {
     ) {
         var exactAlarmGranted by remember { mutableStateOf(canScheduleExactAlarms()) }
         var batteryOptimizationDisabled by remember { mutableStateOf(isBatteryOptimizationDisabled()) }
+        var notificationGranted by remember { mutableStateOf(canPostNotifications()) }
         var isCheckingPermissions by remember { mutableStateOf(false) }
 
         // Periodically check permissions when user returns from settings
@@ -154,12 +186,13 @@ class PermissionsActivity : ComponentActivity() {
                 delay(1000) // Check every second
                 exactAlarmGranted = canScheduleExactAlarms()
                 batteryOptimizationDisabled = isBatteryOptimizationDisabled()
+                notificationGranted = canPostNotifications()
             }
         }
 
         // Auto-navigate when all permissions are granted
-        LaunchedEffect(exactAlarmGranted, batteryOptimizationDisabled) {
-            if (exactAlarmGranted && batteryOptimizationDisabled && !fromSettings) {
+        LaunchedEffect(exactAlarmGranted, batteryOptimizationDisabled, notificationGranted) {
+            if (exactAlarmGranted && batteryOptimizationDisabled && notificationGranted && !fromSettings) {
                 delay(1000) // Small delay to show success state
                 onAllPermissionsGranted()
             }
@@ -230,6 +263,15 @@ class PermissionsActivity : ComponentActivity() {
                 )
             }
 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                PermissionCard(
+                    title = "Notifications",
+                    description = "Required for Athan and prayer countdown notifications on Android 13+",
+                    isGranted = notificationGranted,
+                    onRequest = { requestNotificationPermission() }
+                )
+            }
+
             // Info Card
             Card(
                 modifier = Modifier.fillMaxWidth(),
@@ -258,7 +300,7 @@ class PermissionsActivity : ComponentActivity() {
             Spacer(modifier = Modifier.height(16.dp))
 
             // Action Buttons
-            if (exactAlarmGranted && batteryOptimizationDisabled) {
+            if (exactAlarmGranted && batteryOptimizationDisabled && notificationGranted) {
                 // All permissions granted
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -316,6 +358,7 @@ class PermissionsActivity : ComponentActivity() {
                             delay(500)
                             exactAlarmGranted = canScheduleExactAlarms()
                             batteryOptimizationDisabled = isBatteryOptimizationDisabled()
+                            notificationGranted = canPostNotifications()
                             isCheckingPermissions = false
                         }
                     },

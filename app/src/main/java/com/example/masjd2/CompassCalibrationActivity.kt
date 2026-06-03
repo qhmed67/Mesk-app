@@ -11,7 +11,6 @@ import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -47,6 +46,7 @@ class CompassCalibrationActivity : ComponentActivity(), SensorEventListener {
     private var motionStartTime = 0L
     private var motionDetected = false
     private var calibrationComplete = false
+    private var accelerometerInitialized = false
     
     // Motion thresholds
     private val motionThreshold = 2.0f // Minimum acceleration change
@@ -113,10 +113,14 @@ class CompassCalibrationActivity : ComponentActivity(), SensorEventListener {
         event?.let { sensorEvent ->
             when (sensorEvent.sensor.type) {
                 Sensor.TYPE_ACCELEROMETER -> {
+                    if (!accelerometerInitialized) {
+                        lastAccelerometerValues = sensorEvent.values.clone()
+                        accelerometerInitialized = true
+                        return
+                    }
                     detectMotion(sensorEvent.values)
                 }
                 Sensor.TYPE_MAGNETIC_FIELD -> {
-                    // Store magnetometer values for potential future use
                     lastMagnetometerValues = sensorEvent.values.clone()
                 }
             }

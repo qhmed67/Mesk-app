@@ -10,7 +10,7 @@ import android.content.Context
  */
 @Database(
     entities = [PrayerEntity::class, UserPreferencesEntity::class, AthanSettingsEntity::class],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class PrayerDatabase : RoomDatabase() {

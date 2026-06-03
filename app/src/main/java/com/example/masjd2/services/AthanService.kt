@@ -80,11 +80,17 @@ class AthanService : Service() {
             return START_NOT_STICKY
         }
         
+        if (intent == null) {
+            Log.w(TAG, "Null intent received - stopping service")
+            stopAthan()
+            return START_NOT_STICKY
+        }
+        
         // Get prayer information from intent
-        prayerName = intent?.getStringExtra("prayer_name") ?: "Prayer"
-        alarmId = intent?.getIntExtra("alarm_id", -1) ?: -1
-        val athanVolume = intent?.getFloatExtra("athan_volume", 1.0f) ?: 1.0f
-        val customAthanPath = intent?.getStringExtra("custom_athan_path")
+        prayerName = intent.getStringExtra("prayer_name") ?: "Prayer"
+        alarmId = intent.getIntExtra("alarm_id", -1)
+        val athanVolume = intent.getFloatExtra("athan_volume", 1.0f)
+        val customAthanPath = intent.getStringExtra("custom_athan_path")
         
         Log.d(TAG, "Starting Athan for $prayerName with volume $athanVolume")
         
@@ -294,7 +300,12 @@ class AthanService : Service() {
         wakeLock = null
         
         // Stop foreground service
-        stopForeground(true)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            stopForeground(Service.STOP_FOREGROUND_REMOVE)
+        } else {
+            @Suppress("DEPRECATION")
+            stopForeground(true)
+        }
         stopSelf()
     }
     
@@ -307,7 +318,12 @@ class AthanService : Service() {
             
             mediaSession?.setCallback(object : MediaSession.Callback() {
                 override fun onMediaButtonEvent(mediaButtonEvent: Intent): Boolean {
-                    val keyEvent = mediaButtonEvent.getParcelableExtra<android.view.KeyEvent>(Intent.EXTRA_KEY_EVENT)
+                    val keyEvent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        mediaButtonEvent.getParcelableExtra(Intent.EXTRA_KEY_EVENT, android.view.KeyEvent::class.java)
+                    } else {
+                        @Suppress("DEPRECATION")
+                        mediaButtonEvent.getParcelableExtra(Intent.EXTRA_KEY_EVENT)
+                    }
                     if (keyEvent?.action == android.view.KeyEvent.ACTION_DOWN) {
                         when (keyEvent.keyCode) {
                             android.view.KeyEvent.KEYCODE_VOLUME_DOWN, android.view.KeyEvent.KEYCODE_VOLUME_UP -> {
@@ -435,7 +451,12 @@ class VolumeClickChecker(private val athanService: AthanService) {
                 override fun onReceive(context: Context?, intent: Intent?) {
                     when (intent?.action) {
                         Intent.ACTION_MEDIA_BUTTON -> {
-                            val keyEvent = intent.getParcelableExtra<KeyEvent>(Intent.EXTRA_KEY_EVENT)
+                            val keyEvent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT, KeyEvent::class.java)
+                            } else {
+                                @Suppress("DEPRECATION")
+                                intent.getParcelableExtra(Intent.EXTRA_KEY_EVENT)
+                            }
                             if (keyEvent?.action == KeyEvent.ACTION_DOWN) {
                                 when (keyEvent.keyCode) {
                                     KeyEvent.KEYCODE_VOLUME_DOWN, KeyEvent.KEYCODE_VOLUME_UP -> {

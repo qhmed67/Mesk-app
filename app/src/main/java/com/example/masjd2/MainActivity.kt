@@ -17,7 +17,6 @@ import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Settings
 import kotlinx.coroutines.delay
@@ -42,17 +41,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+
 import androidx.lifecycle.lifecycleScope
 import com.example.masjd2.data.db.PrayerEntity
 import com.example.masjd2.data.db.UserPreferencesEntity
 import com.example.masjd2.repository.PrayerRepository
 import com.example.masjd2.services.AthanAlarmManager
+import com.example.masjd2.services.DailyRescheduleWorker
 import com.example.masjd2.services.PrayerNotificationService
 import com.example.masjd2.ui.PermissionsActivity
 import com.example.masjd2.ui.SettingsActivity
 import com.example.masjd2.ui.theme.Masjd2Theme
 import com.example.masjd2.R
-import android.view.KeyEvent
 import android.app.AlarmManager
 import android.content.Context
 import android.content.Intent
@@ -62,15 +64,10 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.widget.Toast
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.flow.firstOrNull
-import java.text.SimpleDateFormat
-import java.util.*
-import androidx.compose.ui.layout.onGloballyPositioned
-import androidx.compose.ui.platform.LocalDensity
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 import androidx.core.content.ContextCompat
-import android.Manifest
-import android.content.pm.PackageManager
-import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.LocationSettingsRequest
 import com.google.android.gms.location.LocationSettingsResponse
@@ -130,18 +127,21 @@ class MainActivity : ComponentActivity() {
      */
     private suspend fun initializeAthanSystem() {
         try {
-            // Initialize default Athan settings if not exists
             prayerRepository.initializeAthanSettings()
             
-            // Schedule alarms for today's prayer times
-            val today = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date())
+            val today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
             val todayPrayerTimes = prayerRepository.getPrayerTimesForDate(today)
             
             if (todayPrayerTimes != null) {
                 val athanSettings = prayerRepository.getAthanSettings()
                 if (athanSettings?.isAthanEnabled == true) {
                     val alarmManager = AthanAlarmManager(this)
-                    alarmManager.scheduleAllPrayerAlarms(todayPrayerTimes)
+                    alarmManager.scheduleAllPrayerAlarms(
+                        todayPrayerTimes,
+                        athanSettings.athanVolume,
+                        athanSettings.customAthanPath
+                    )
+                    DailyRescheduleWorker.enqueueDailyReschedule(this)
                     Log.d("MainActivity", "Scheduled Athan alarms for today")
                 } else {
                     Log.d("MainActivity", "Athan is disabled - not scheduling alarms")
@@ -299,9 +299,11 @@ class MainActivity : ComponentActivity() {
      * Check location settings using Google Play Services
      */
     fun checkLocationSettings() {
-        val locationRequest = LocationRequest.Builder(10000)
+        val locationRequest = com.google.android.gms.location.LocationRequest.Builder(
+                com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY,
+                10000
+            )
             .setMinUpdateIntervalMillis(5000)
-            .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
             .build()
         
         val builder = LocationSettingsRequest.Builder()
@@ -432,7 +434,7 @@ fun PrayerTimesApp(prayerRepository: PrayerRepository) {
                                 color = Color.White
                         )
                         // Country + Gregorian date inline
-                        val currentDate = SimpleDateFormat("dd MMM yyyy", Locale.US).format(Date())
+                        val currentDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd MMM yyyy", Locale.US))
                         Text(
                             text = "${prefs.country}, $currentDate",
                             fontSize = 12.sp,
@@ -454,37 +456,18 @@ fun PrayerTimesApp(prayerRepository: PrayerRepository) {
         
         // No scrolling - removed all scroll functionality
         
-        val density = LocalDensity.current
-        var parentHeightPx by remember { mutableStateOf(0) }
-        var initialTopOffsetPx by remember { mutableStateOf<Int?>(null) }
-        val isIshaExpanded = expandedPrayer == "isha"
-        val ishaExtraShift by animateDpAsState(
-            targetValue = if (isIshaExpanded) 56.dp else 0.dp,
-            animationSpec = tween(durationMillis = 300),
-            label = "isha_extra_shift"
-        )
-
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                .onGloballyPositioned { parentHeightPx = it.size.height }
+                .padding(start = 16.dp, end = 16.dp, bottom = 110.dp)
         ) {
             todayPrayerTimes?.let { prayerTimes ->
                 Column(
                     modifier = Modifier
                         .align(Alignment.TopCenter)
-                        .padding(top = with(density) { (initialTopOffsetPx ?: 0).toDp() })
-                        .offset(y = -ishaExtraShift)
                         .fillMaxWidth()
-                        .padding(horizontal = 8.dp)
-                        .onGloballyPositioned { coords ->
-                            val contentHeight = coords.size.height
-                            if (initialTopOffsetPx == null && parentHeightPx > 0) {
-                                val centered = ((parentHeightPx - contentHeight) / 2).coerceAtLeast(0)
-                                initialTopOffsetPx = centered
-                            }
-                        },
+                        .padding(start = 8.dp, end = 8.dp, top = 144.dp)
+                        .verticalScroll(rememberScrollState()),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(24.dp)
                 ) {
@@ -495,15 +478,12 @@ fun PrayerTimesApp(prayerRepository: PrayerRepository) {
                     PrayerCardWithMargin("العشاء", "Isha", prayerTimes.isha, "isha", expandedPrayer, isAnimating) { expandedPrayer = it }
                 }
             } ?: run {
-                // Show loading or no data message
                 Card(
                     modifier = Modifier.align(Alignment.Center).fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(24.dp),
+                        modifier = Modifier.fillMaxWidth().padding(24.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         Text(
@@ -532,11 +512,11 @@ fun PrayerTimesApp(prayerRepository: PrayerRepository) {
             ) {
                 // Photo background
                 Image(
-                    painter = painterResource(id = R.drawable.container), // Use your container.jpg
+                    painter = painterResource(id = R.drawable.container),
                     contentDescription = null,
                     modifier = Modifier
-                        .width(310.dp) // Very tiny increase
-                        .height(70.dp) // Decreased height
+                        .fillMaxWidth(0.9f)
+                        .height(70.dp)
                         .clip(RoundedCornerShape(20.dp)),
                     contentScale = ContentScale.Crop
                 )
@@ -544,8 +524,8 @@ fun PrayerTimesApp(prayerRepository: PrayerRepository) {
                 // Navigation buttons overlay
                 Row(
                     modifier = Modifier
-                        .width(310.dp) // Match container width
-                        .height(70.dp) // Match container height
+                        .fillMaxWidth(0.9f)
+                        .height(70.dp)
                         .padding(horizontal = 20.dp), // Adjusted padding for perfect centering
                     horizontalArrangement = Arrangement.SpaceEvenly, // Equal spacing between all buttons
                     verticalAlignment = Alignment.CenterVertically

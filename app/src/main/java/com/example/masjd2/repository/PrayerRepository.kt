@@ -14,7 +14,8 @@ import com.example.masjd2.data.db.UserPreferencesEntity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.withContext
-import java.text.SimpleDateFormat
+import java.time.*
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 /**
@@ -24,7 +25,7 @@ import java.util.*
 class PrayerRepository(context: Context) {
     
     private val prayerDao: PrayerDao = PrayerDatabase.getDatabase(context).prayerDao()
-    private val apiService = RetrofitClient.prayerApiService
+    private val apiService = RetrofitClient.getPrayerApiService(context)
     private val geocoder = Geocoder(context, Locale.getDefault())
     
     companion object {
@@ -35,7 +36,7 @@ class PrayerRepository(context: Context) {
      * Get prayer times for today from local database
      */
     fun getTodayPrayerTimes(): Flow<PrayerEntity?> {
-        val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+        val today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
         return prayerDao.getPrayerTimesForDateFlow(today)
     }
     
@@ -57,6 +58,7 @@ class PrayerRepository(context: Context) {
     /**
      * Get location info from coordinates
      */
+    @Suppress("DEPRECATION")
     suspend fun getLocationInfo(latitude: Double, longitude: Double): Pair<String, String> = withContext(Dispatchers.IO) {
         try {
             val addresses = geocoder.getFromLocation(latitude, longitude, 1)
@@ -131,7 +133,9 @@ class PrayerRepository(context: Context) {
                         response.body()!!,
                         latitude,
                         longitude,
-                        calculationMethodId
+                        calculationMethodId,
+                        country,
+                        city
                     )
                     allMonthsData.addAll(prayerEntities)
                 } else {
@@ -168,7 +172,10 @@ class PrayerRepository(context: Context) {
         method: Int
     ): Result<List<PrayerEntity>> = withContext(Dispatchers.IO) {
         try {
-            val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+            val locationInfo = getLocationInfo(latitude, longitude)
+            val country = locationInfo.first
+            val city = locationInfo.second
+            val currentYear = Year.now().value
             val allPrayerTimes = mutableListOf<PrayerEntity>()
             
             // Fetch prayer times for each month of the current year
@@ -178,7 +185,7 @@ class PrayerRepository(context: Context) {
                 if (response.isSuccessful) {
                     val prayerData = response.body()
                     if (prayerData != null && prayerData.status == "OK") {
-                        val monthPrayerTimes = convertApiResponseToEntities(prayerData, latitude, longitude, method)
+                        val monthPrayerTimes = convertApiResponseToEntities(prayerData, latitude, longitude, method, country, city)
                         allPrayerTimes.addAll(monthPrayerTimes)
                     }
                 } else {
@@ -235,7 +242,7 @@ class PrayerRepository(context: Context) {
      */
     suspend fun hasPrayerTimesForToday(): Boolean {
         return try {
-            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            val today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
             val prayerTimes = prayerDao.getPrayerTimesForDate(today)
             val hasPrayerTimes = prayerTimes != null
             Log.d(TAG, "hasPrayerTimesForToday: $hasPrayerTimes, today: $today, prayerTimes: $prayerTimes")
@@ -277,7 +284,7 @@ class PrayerRepository(context: Context) {
             val count = prayerDao.getPrayerTimesCount()
             val earliestDate = prayerDao.getEarliestDate()
             val latestDate = prayerDao.getLatestDate()
-            val today = SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()).format(Date())
+            val today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
             val hasToday = prayerDao.getPrayerTimesForDate(today) != null
             
             "Database Status: count=$count, earliest=$earliestDate, latest=$latestDate, today=$today, hasToday=$hasToday"
@@ -315,25 +322,82 @@ class PrayerRepository(context: Context) {
         response: PrayerApiResponse,
         latitude: Double,
         longitude: Double,
-        method: Int
+        method: Int,
+        country: String = "",
+        city: String = ""
     ): List<PrayerEntity> {
         val methodName = getCalculationMethodName(method)
-        val locationInfo = getLocationInfo(latitude, longitude)
-        
+        val resolvedCountry = country.ifEmpty { getLocationInfo(latitude, longitude).first }
+        val resolvedCity = city.ifEmpty { getLocationInfo(latitude, longitude).second }
+        val timezoneId = TimeZone.getDefault().id
+
         return response.data.map { day ->
+            val dateStr = formatDateFromApi(day.date.gregorian.date)
+            val fajrTime = formatTimeFromApi(day.timings.fajr)
+            val dhuhrTime = formatTimeFromApi(day.timings.dhuhr)
+            val asrTime = formatTimeFromApi(day.timings.asr)
+            val maghribTime = formatTimeFromApi(day.timings.maghrib)
+            val ishaTime = formatTimeFromApi(day.timings.isha)
+
             PrayerEntity(
-                date = formatDateFromApi(day.date.gregorian.date),
-                fajr = formatTimeFromApi(day.timings.fajr),
-                dhuhr = formatTimeFromApi(day.timings.dhuhr),
-                asr = formatTimeFromApi(day.timings.asr),
-                maghrib = formatTimeFromApi(day.timings.maghrib),
-                isha = formatTimeFromApi(day.timings.isha),
-                country = locationInfo.first,
-                city = locationInfo.second,
+                date = dateStr,
+                fajr = fajrTime,
+                dhuhr = dhuhrTime,
+                asr = asrTime,
+                maghrib = maghribTime,
+                isha = ishaTime,
+                fajrUtc = computeUtcTimestamp(dateStr, fajrTime, timezoneId),
+                dhuhrUtc = computeUtcTimestamp(dateStr, dhuhrTime, timezoneId),
+                asrUtc = computeUtcTimestamp(dateStr, asrTime, timezoneId),
+                maghribUtc = computeUtcTimestamp(dateStr, maghribTime, timezoneId),
+                ishaUtc = computeUtcTimestamp(dateStr, ishaTime, timezoneId),
+                timezoneId = timezoneId,
+                country = resolvedCountry,
+                city = resolvedCity,
                 calculationMethod = methodName,
                 latitude = latitude,
                 longitude = longitude
             )
+        }
+    }
+
+    /**
+     * Convert a local date + time string to a UTC epoch timestamp.
+     * Uses the stored IANA timezone so DST transitions are handled correctly.
+     */
+    private fun computeUtcTimestamp(date: String, time12: String, timezoneId: String): Long {
+        return try {
+            val tz = ZoneId.of(timezoneId)
+            val time24 = convertTo24HourFormat(time12)
+            val localDateTime = LocalDateTime.parse("${date}T${time24}:00", DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"))
+            val instant = localDateTime.atZone(tz).toInstant()
+            instant.toEpochMilli()
+        } catch (e: Exception) {
+            Log.e(TAG, "Error computing UTC timestamp for $date $time12", e)
+            0L
+        }
+    }
+
+    /**
+     * Convert 12-hour format ("h:mm AM/PM") to 24-hour ("HH:mm")
+     */
+    private fun convertTo24HourFormat(time12: String): String {
+        return try {
+            if (time12.contains("AM", ignoreCase = true) || time12.contains("PM", ignoreCase = true)) {
+                val upper = time12.uppercase().trim()
+                val isPM = upper.contains("PM")
+                val timePart = upper.replace("AM", "").replace("PM", "").trim()
+                val parts = timePart.split(":")
+                var hour = parts[0].toInt()
+                val minute = parts[1]
+                if (isPM && hour != 12) hour += 12
+                if (!isPM && hour == 12) hour = 0
+                "${hour.toString().padStart(2, '0')}:$minute"
+            } else {
+                time12
+            }
+        } catch (e: Exception) {
+            time12
         }
     }
     

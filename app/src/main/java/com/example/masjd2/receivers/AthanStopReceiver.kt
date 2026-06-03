@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import androidx.core.content.ContextCompat
 import com.example.masjd2.services.AthanService
 
 /**
@@ -24,7 +25,7 @@ class AthanStopReceiver : BroadcastReceiver() {
                 val serviceIntent = Intent(context, AthanService::class.java).apply {
                     action = AthanService.ACTION_STOP_ATHAN
                 }
-                context.startService(serviceIntent)
+                ContextCompat.startForegroundService(context, serviceIntent)
                 Log.d(TAG, "Sent stop command to AthanService")
             }
         }

@@ -200,21 +200,24 @@ fun CompassScreen(
     isLocationReady: Boolean,
     isSensorReady: Boolean
 ) {
-    // Calculate the angle the needle should point to Qibla
-    // The needle should point to the Qibla direction relative to the device's current orientation
-    val needleRotation = (qiblaDirection - currentAzimuth + 360) % 360
-    
-    // Smooth needle rotation with 300ms animation for better user experience
+    // Track unwrapped rotation so the needle always takes the shortest path
+    // instead of wrapping around 360°
+    var previousNeedleTarget by remember { mutableStateOf(0f) }
+    var accumulatedRotation by remember { mutableStateOf(0f) }
+
+    val needleTarget = (qiblaDirection - currentAzimuth + 360) % 360
+
+    // Compute the signed shortest-path delta around the circle
+    val delta = (needleTarget - previousNeedleTarget + 540) % 360 - 180
+    accumulatedRotation += delta
+    previousNeedleTarget = needleTarget
+
+    // Smooth needle rotation with 300ms animation
     val animatedRotation by animateFloatAsState(
-        targetValue = needleRotation,
-        animationSpec = tween(durationMillis = 300), // Faster response for better accuracy
+        targetValue = accumulatedRotation,
+        animationSpec = tween(durationMillis = 300),
         label = "needle_rotation"
     )
-    
-    // Force recomposition for real-time updates when sensor values change
-    LaunchedEffect(currentAzimuth, qiblaDirection) {
-        // This ensures the screen updates when sensor values change
-    }
     
     Box(
         modifier = Modifier

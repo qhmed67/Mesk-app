@@ -26,8 +26,6 @@ import com.example.masjd2.R
 import com.example.masjd2.repository.PrayerRepository
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
 
 /**
  * Checking activity that appears first to check database status
