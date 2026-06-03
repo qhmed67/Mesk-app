@@ -1,4 +1,23 @@
-# Mesk — Islamic Prayer Times
+<div align="center">
+
+<img src="app/src/main/res/drawable/icon.png" alt="Mesk" width="200"/>
+
+# Mesk — مِسك
+
+**Accurate Prayer Times, Qibla Direction, and Athkar for Android**
+
+<br/>
+
+![Kotlin](https://img.shields.io/badge/Kotlin-1.9.0-7F52FF?style=for-the-badge&logo=kotlin&logoColor=white)
+![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?style=for-the-badge&logo=jetpackcompose&logoColor=white)
+![Android](https://img.shields.io/badge/Android-7.0%2B-3DDC84?style=for-the-badge&logo=android&logoColor=white)
+![Min SDK 24](https://img.shields.io/badge/Min%20SDK-24-FF6F00?style=for-the-badge&logo=android&logoColor=white)
+![Room](https://img.shields.io/badge/Room-Reactive%20Flow-48B983?style=for-the-badge&logo=sqlite&logoColor=white)
+![Retrofit](https://img.shields.io/badge/Retrofit-OkHttp%20Cache-48B983?style=for-the-badge&logo=square&logoColor=white)
+![WorkManager](https://img.shields.io/badge/WorkManager-2.9.0-4285F4?style=for-the-badge&logo=android&logoColor=white)
+![AlAdhan API](https://img.shields.io/badge/AlAdhan-Prayer%20API-A0522D?style=for-the-badge&logo=islam&logoColor=white)
+
+</div>
 
 An Android application for daily prayer times, Qibla direction, and Islamic remembrances (Athkar). Built with Kotlin and Jetpack Compose, it combines accurate astronomical calculations with a reliable background scheduling system that survives device reboots, Doze mode, and missing exact-alarm permissions.
 
